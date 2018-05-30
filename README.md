@@ -1,7 +1,7 @@
 # potts_tesis_javier_uranga_2012
 Escalabilidad del Modelo de Potts en entornos distribuidos con OpenMP y MPI
 
-autor: Javier Nicolás Uranga ( javiercba@gmai.com )
+autor: Javier Nicolás Uranga ( javiercba@gmail.com )
 
 Directores: Nicolás Wolovick, Javier Blanco
 Presentado como Trabajo Final Integrador de la carrera de posgrado
