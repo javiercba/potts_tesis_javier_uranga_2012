@@ -42,7 +42,7 @@
  * using OpenMP library for thread handling,
  * Javier Nicolas Uranga, Postgraduate Thesis in Distributed Systems, 
  * National University of Cordoba, Argentina, UNC-FAMAF, January 2012.
- * http://www.cs.famaf.unc.edu.ar/ssd/?q=node/336
+ * http://www.famaf.unc.edu.ar/wp-content/uploads/2014/04/8-Javier-Uranga.pdf
  */
 
 #include <stdlib.h>  /* rand */
