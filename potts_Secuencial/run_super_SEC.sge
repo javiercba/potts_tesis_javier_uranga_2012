@@ -1,0 +1,84 @@
+
+# -- Datos para el sistema de colas ---
+#$ -N run_MEGA_SEC
+#$ -S /bin/bash
+#$ -V
+# Make sure that the .e and .o file arrive in the
+# working directory
+#$ -cwd
+# Merge the standard out and standard error to one file
+#$ -j y
+
+
+#$ -pe openmpi 8
+#$ -q timelimit.q
+
+echo "SEC, wb, con Inconsist"
+echo " "
+echo "Uso PE openmpi 8, fill_up, cola timelimit, 1 nodo, muestra_max=20, L_desde=516, L_hasta=8256 "
+echo " "
+
+
+bin="potts3-cpu-SEC-wb-con"
+outFull="salida_SEC_wb_con_Full.txt"
+outPrev="salida_SEC_wb_con"
+
+L[0]=516
+L[1]=1032
+L[2]=2064
+L[3]=4128
+L[4]=8256
+L[4]=16512
+
+muestra_max=20
+
+	echo "Ejecutando mediciones SEC, compilacion on-demand"
+
+	for ((l=0; l< ${#L[*]}; l++))
+	do
+
+	# -------------------------------------------------------- compila-----------------------------------------------------------
+
+		sed "s/_REPLACE_L_/${L[$l]}/" Makefile.parameters.SEC > Makefile.tmp.SEC
+		make -f Makefile.tmp.SEC > /dev/null 2>&1
+
+	# --------------------------------------------------------- ejecuta-----------------------------------------------------------
+
+		date >> $outFull
+	        echo "ejecutando SEC caso: VALOR_L: ${L[$l]}" >> $outFull
+
+		for ((muestra=1; muestra<=$muestra_max; muestra++))
+		do
+
+		        /usr/bin/time -f "\nTIME:\nreal\t%E\nuser\t%U\nsys\t%S" -a -o $outPrev-${L[$l]} ./$bin-${L[$l]}  >> $outPrev-${L[$l]}     
+
+
+		done
+
+	# --------------------------------------------------------- calcula-----------------------------------------------------------
+
+		cat $outPrev-${L[$l]} | awk '/real/ {     	n += 1; split($2,array,":"); \
+								item = array[1] * 60 + array[2];  \
+								sum += item;  \
+								sum2 += (item)^2 } \
+						END {     	avg = sum/n; \
+								avg2 = sum2/n; \
+								stddev = sqrt(avg2 - avg^2); \
+								print avg, "+/-", stddev }' >> $outFull
+
+	done
+
+
+	# ---------------------------------------------------------- limpia-----------------------------------------------------------
+	rm *.tmp.SEC
+	rm *.o
+
+	echo "FIN mediciones SEC, compilacion on-demand"
+
+exit 0
+
+
+
+# -- Fin ---
+
+
