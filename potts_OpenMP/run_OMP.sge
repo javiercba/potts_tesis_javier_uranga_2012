@@ -1,0 +1,93 @@
+
+# -- Datos para el sistema de colas ---
+#$ -N run_OMP
+#$ -S /bin/bash
+#$ -V
+# Make sure that the .e and .o file arrive in the
+# working directory
+#$ -cwd
+# Merge the standard out and standard error to one file
+#$ -j y
+
+
+#$ -pe openmpi 8
+#$ -q timelimit.q
+
+echo "OMP, wb, con Inconsist, con threads variables 2-4-8, COMPILACION ON-DEMAND"
+echo " "
+echo "Uso PE openmpi 8, fill_up, cola timelimit, 1 nodo, OMP_NUM_THREADS=VARIABLE:2-4-8, muestra_max=20, L_desde=516, L_hasta=16512 "
+echo " "
+
+
+bin="potts3-cpu-OMP"
+outFull="salida_OMP_Full.txt"
+outPrev="salida_OMP"
+
+L[0]=516
+L[1]=1032
+L[2]=2064
+L[3]=4128
+L[4]=8256
+L[5]=16512
+
+threads_min=2
+threads_max=8
+threads_incr=2
+
+muestra_max=20
+
+	echo "Ejecutando mediciones OMP con threads varaibles 2-4-8, COMPILACION ON DEMAND"
+
+	
+	for ((l=0; l< ${#L[*]}; l++))
+	do
+
+	# -------------------------------------------------------- compila-----------------------------------------------------------
+
+		sed "s/_REPLACE_L_/${L[$l]}/" Makefile.parameters.OMP > Makefile.tmp.OMP
+		make -f Makefile.tmp.OMP > /dev/null 2>&1
+
+	# --------------------------------------------------------- ejecuta-----------------------------------------------------------
+
+		for ((t=$threads_min; t<=$threads_max; t=t*$threads_incr))
+		do
+
+			date >> $outFull
+			echo "ejecutando OMP caso: VALOR_L_thread: ${L[$l]}_$t" >> $outFull
+
+			for ((muestra=1; muestra<=$muestra_max; muestra++))
+			do
+				export OMP_NUM_THREADS=$t
+
+				/usr/bin/time -f "\nTIME:\nreal\t%E\nuser\t%U\nsys\t%S" -a -o $outPrev-${L[$l]}-$t ./$bin-${L[$l]}  >> $outPrev-${L[$l]}-$t    
+
+
+			done
+	# --------------------------------------------------------- calcula-----------------------------------------------------------
+			
+			cat $outPrev-${L[$l]}-$t | awk '/real/ {     	n += 1; split($2,array,":"); \
+									item = array[1] * 60 + array[2];  \
+									sum += item;  \
+									sum2 += (item)^2 } \
+							END {     	avg = sum/n; \
+									avg2 = sum2/n; \
+									stddev = sqrt(avg2 - avg^2); \
+									print avg, "+/-", stddev }' >> $outFull
+
+		done
+
+	done
+
+	# ---------------------------------------------------------- limpia-----------------------------------------------------------
+	rm *.tmp.OMP
+	rm *.o
+
+	echo "FIN mediciones OMP con threads variables compilacion on demand"
+
+exit 0
+
+
+
+# -- Fin ---
+
+
