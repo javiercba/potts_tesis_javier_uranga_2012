@@ -1,0 +1,145 @@
+
+# -- Datos para el sistema de colas ---
+#$ -N run_SpinFlip
+#$ -S /bin/bash
+#$ -V
+# Make sure that the .e and .o file arrive in the
+# working directory
+#$ -cwd
+# Merge the standard out and standard error to one file
+#$ -j y
+
+
+#$ -pe openmpi 48
+#$ -q timelimit.q
+
+echo "MPI puro, WB, con Inconsist, ****todas las topologias******* incluso np5********COMPILACION ON-DEMAND****"
+echo " "
+echo "Uso PE openmpi 48, fill_up, cola timelimit, 6 nodos, muestra_max=20, L_desde=516, L_hasta=16512 "
+echo " "
+
+
+bin="potts3-cpu-MPI"
+outFull="Salida_MPI_Full.txt"
+outPrev="Salida_MPI"
+
+#L's particulares para el caso de 5 nodos
+L5[0]=520
+L5[1]=1040
+L5[2]=2070
+L5[3]=4130
+L5[4]=8260
+L5[5]=16520
+
+#L's genericos para casi todos los demas casos
+Lg[0]=516
+Lg[1]=1032
+Lg[2]=2064
+Lg[3]=4128
+Lg[4]=8256
+Lg[5]=16512
+
+TOPOX[0]=1
+TOPOX[1]=2
+
+TOPOY[0]=2
+TOPOY[1]=3
+TOPOY[2]=4
+TOPOY[3]=5
+TOPOY[4]=6
+
+
+result=0
+muestra_max=20
+topo_max_cluster=6
+
+	echo "Ejecutando mediciones MPI PURO, en todas las topologias, COMPILACION ON-DEMAND, prueba spinflip"
+
+	if [ ${#Lg[*]} -ne ${#L5[*]} ]
+	then
+		echo "Error dimensiones L5 y Lg. Se finaliza el script"
+		exit 1
+	fi
+
+	for ((i=0; i< ${#TOPOX[*]}; i++))
+	do
+		for ((j=0; j< ${#TOPOY[*]}; j++))
+		do
+
+			let "result= ${TOPOX[$i]} * ${TOPOY[$j]}"
+
+			if [ "$result" -gt "$topo_max_cluster" ]
+			then
+				continue
+			fi
+
+			if [ "$result" -eq 5 ]
+			then
+				for ((m=0; m< ${#L5[*]}; m++))
+				do
+					L[m]=${L5[m]}
+				done 
+
+			else	
+				for ((k=0; k< ${#Lg[*]}; k++))
+				do
+					L[k]=${Lg[k]}
+				done 
+			fi
+
+			sed "s/_REPLACE_NODESX_/${TOPOX[$i]}/" Makefile.parameters.MPI > Makefile.tmp.1.MPI
+			sed "s/_REPLACE_NODESY_/${TOPOY[$j]}/" Makefile.tmp.1.MPI > Makefile.tmp.2.MPI
+
+			for ((l=0; l< ${#L[*]}; l++))
+			do
+
+			# --------------------------------------------------------- compila-----------------------------------------------------------
+
+			            sed "s/_REPLACE_L_/${L[$l]}/" Makefile.tmp.2.MPI > Makefile.tmp.3.MPI
+			            make -f Makefile.tmp.3.MPI > /dev/null 2>&1
+
+				    date >> $outFull
+				    echo "ejecutando caso: VALOR_L: ${L[$l]} Topologia:${TOPOX[$i]}x${TOPOY[$j]}" >> $outFull
+
+			# --------------------------------------------------------- ejecuta-----------------------------------------------------------
+
+				    for ((muestra=1; muestra<=$muestra_max; muestra++))
+				    do
+				         /usr/bin/time -f "\nTIME:\nreal\t%E\nuser\t%U\nsys\t%S" -a -o $outPrev-${L[$l]}-${TOPOX[$i]}-${TOPOY[$j]}  \
+					 mpirun -np $result -machinefile $TMPDIR/machines ./$bin-${L[$l]}-${TOPOX[$i]}-${TOPOY[$j]}  \
+					 >> $outPrev-${L[$l]}-${TOPOX[$i]}-${TOPOY[$j]}      
+
+
+				    done
+
+			# --------------------------------------------------------- calcula-----------------------------------------------------------
+
+				    cat $outPrev-${L[$l]}-${TOPOX[$i]}-${TOPOY[$j]} | awk '/real/ {     	n += 1; split($2,array,":"); \
+														item = array[1] * 60 + array[2];  \
+														sum += item;  \
+														sum2 += (item)^2 } \
+											      END {     	avg = sum/n; \
+														avg2 = sum2/n; \
+														stddev = sqrt(avg2 - avg^2); \
+														print avg, "+/-", stddev }' >> $outFull
+
+
+
+
+			done
+
+		done
+	done
+	# ---------------------------------------------------------- limpia-----------------------------------------------------------
+	rm *.tmp.*.MPI
+	rm *.o
+
+	echo "FIN mediciones MPI PURO COMPILACION ON DEMAND"
+
+exit 0
+
+
+
+# -- Fin ---
+
+
