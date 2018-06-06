@@ -1,5 +1,13 @@
+/* potts3-cpu-HYBR:
+ * Parallel Version of q-state Potts model
+ * Run in Linux clusters using OpenMpi library, and get maximum paralization on each node, 
+ * using OpenMP library for thread handling,
+ * Javier Nicolas Uranga, Postgraduate Thesis in Distributed Systems, 
+ * National University of Cordoba, Argentina, UNC-FAMAF, January 2012.
+ * http://www.famaf.unc.edu.ar/wp-content/uploads/2014/04/8-Javier-Uranga.pdf
+ */
+
 /*
- * potts3, an optimized CPU implementation of q-state Potts model.
  * For an L*L system of the Q-state Potts model, this code starts from an
  * initial ordered state (blacks=0, whites=0), it fixes the temperature temp
  * to TEMP_MIN and run TRAN Monte Carlo steps (MCS) to attain equilibrium,
@@ -11,8 +19,9 @@
  * realizations of the thermal noise.
  * The outputs are the averaged energy, magnetization and their related second
  * and fourth moments for each temperature.
- * Copyright (C) 2010 Ezequiel E. Ferrero, Juan Pablo De Francesco,
- * Nicolás Wolovick, Sergio A. Cannas
+ */
+ 
+ /* Copyright (C) 2012 javier nicolas uranga
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -28,34 +37,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-/*
- * This code was originally implemented for: "q-state Potts model metastability
- * study using optimized GPU-based Monte Carlo algorithms",
- * Ezequiel E. Ferrero, Juan Pablo De Francesco, Nicolás Wolovick,
- * Sergio A. Cannas
- * http://arxiv.org/abs/1101.0876
- */
-
-/* Parallel Version: Major changes. 
- * New features were included, in order to distribute processing into 
- * Linux clusters using OpenMpi library, and get maximum paralization on each node, 
- * using OpenMP library for thread handling,
- * Javier Nicolas Uranga, Postgraduate Thesis in Distributed Systems, 
- * National University of Cordoba, Argentina, UNC-FAMAF, January 2012.
- * http://www.famaf.unc.edu.ar/wp-content/uploads/2014/04/8-Javier-Uranga.pdf
- */
-
 
 /*
-
-
-mpicc -O3 -std=c99 -Wall -Wextra -ffast-math -march=core2 -funroll-loops -lm -fopenmp potts3-cpu-HYBR.c -o potts3-cpu-HYBR-516-1x6 -DQ=9 -DNODESX=1 -DNODESY=6 -DL=516 -DSAMPLES=1 -DTEMP_MIN=0.71f -DTEMP_MAX=0.72f -DDELTA_TEMP=0.005f -DTRAN=20 -DTMAX=80 -DDELTA_T=5
-
-export OMP_NUM_THREADS=8
-
-time mpirun -np 6 -machinefile mymachinefile -x OMP_NUM_THREADS ./potts3-cpu-HYBR-516-1x6
-
-
+ *  mpicc -O3 -std=c99 -Wall -Wextra -ffast-math -march=core2 -funroll-loops -lm -fopenmp potts3-cpu-HYBR.c -o potts3-cpu-HYBR-516-1x6 -DQ=9 -DNODESX=1 -DNODESY=6 -DL=516 -DSAMPLES=1 -DTEMP_MIN=0.71f -DTEMP_MAX=0.72f -DDELTA_TEMP=0.005f -DTRAN=20 -DTMAX=80 -DDELTA_T=5
+ *  export OMP_NUM_THREADS=8
+ *  time mpirun -np 6 -machinefile mymachinefile -x OMP_NUM_THREADS ./potts3-cpu-HYBR-516-1x6
 
 */
 
@@ -511,38 +497,38 @@ void ghostLoading(void){
 		for (j=1; j<Lmpiy-1; j++){ // j va desde 1 a Lmpi-2 inclusive
 			//norte
 			i=1;			
-			ii=(((i+j)%2)*Lmpix+i)/2;	//??	//del paper, (i,j) se mapea en (ii,j)
+			ii=(((i+j)%2)*Lmpix+i)/2;  //del paper, (i,j) se mapea en (ii,j)
 					 
 				if (ii<(Lmpix/2))
 					 gnt[j]= whites[ii][j].data;
-				else if (ii>=(Lmpix/2))// deberia ser un >= en vez de > ?????????
+				else if (ii>=(Lmpix/2))   // evaluar  >= vs > 
 					gnt[j]= blacks[ii-(Lmpix/2)][j].data;
 			//sur
 			i=Lmpix-2;		
-			ii=(((i+j)%2)*Lmpix+i)/2;	//??	//del paper, (i,j) se mapea en (ii,j)
+			ii=(((i+j)%2)*Lmpix+i)/2; //del paper, (i,j) se mapea en (ii,j)
 
 				if (ii<(Lmpix/2))
 					 gst[j]= whites[ii][j].data;
-				else if (ii>=(Lmpix/2))	// deberia ser un >= en vez de > ?????????
+				else if (ii>=(Lmpix/2))	// evaluar  >= vs > 
 					gst[j]= blacks[ii-(Lmpix/2)][j].data;
 		}
 
 		for (i=1; i<Lmpix-1; i++){	// i va desde 1 a Lmpi-2 inclusive
 			//oeste
 			 j=1;			
-			 ii=(((i+j)%2)*Lmpix+i)/2;	//??	//del paper, (i,j) se mapea en (ii,j)
+			 ii=(((i+j)%2)*Lmpix+i)/2;	//del paper, (i,j) se mapea en (ii,j)
 
 			 if (ii<(Lmpix/2))
 			 	 got[i]= whites[ii][j].data;
-			 else if (ii>=(Lmpix/2))// deberia ser un >= en vez de > ?????????
+			 else if (ii>=(Lmpix/2)) // evaluar  >= vs > 
 				 got[i]= blacks[ii-(Lmpix/2)][j].data;
 			 //este
 			 j=Lmpiy-2;		
-			 ii=(((i+j)%2)*Lmpix+i)/2;	//??	//del paper, (i,j) se mapea en (ii,j)
+			 ii=(((i+j)%2)*Lmpix+i)/2; //del paper, (i,j) se mapea en (ii,j)
 					 
 			 if (ii<(Lmpix/2))
 			 	 get[i]= whites[ii][j].data;
-			 else if (ii>=(Lmpix/2))// deberia ser un >= en vez de > ?????????
+			 else if (ii>=(Lmpix/2)) // evaluar  >= vs > 
 				 get[i]= blacks[ii-(Lmpix/2)][j].data;
 		}
 
