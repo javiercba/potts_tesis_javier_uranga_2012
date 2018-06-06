@@ -1,8 +1,15 @@
+/* potts3-cpu-MI:
+ * Parallel Version of q-state Potts model
+ * Run in Linux clusters using OpenMpi library
+ * Javier Nicolas Uranga, Postgraduate Thesis in Distributed Systems, 
+ * National University of Cordoba, Argentina, UNC-FAMAF, January 2012.
+ * http://www.famaf.unc.edu.ar/wp-content/uploads/2014/04/8-Javier-Uranga.pdf
+ */
+
 /*
- * potts3, an optimized CPU implementation of q-state Potts model.
  * For an L*L system of the Q-state Potts model, this code starts from an
- * initial ordered state (blacks=0, whites=0), it fixes the temperature temp
- * to TEMP_MIN and run TRAN Monte Carlo steps (MCS) to attain equilibrium,
+ * initial ordered state, it fixes the temperature temp  to 'TEMP_MIN' and 
+ * run 'TRAN' Monte Carlo steps (MCS) to attain equilibrium,
  * then it runs TMAX MCS taking one measure each DELTA_T steps to perform
  * averages. After that, it keeps the last configuration of the system and
  * use it as the initial state for the next temperature, temp+DELTA_TEMP.
@@ -11,8 +18,9 @@
  * realizations of the thermal noise.
  * The outputs are the averaged energy, magnetization and their related second
  * and fourth moments for each temperature.
- * Copyright (C) 2010 Ezequiel E. Ferrero, Juan Pablo De Francesco,
- * Nicolás Wolovick, Sergio A. Cannas
+ */
+ 
+ /* Copyright (C) 2012 javier nicolas uranga
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -26,23 +34,6 @@
  *
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- */
-
-/*
- * This code was originally implemented for: "q-state Potts model metastability
- * study using optimized GPU-based Monte Carlo algorithms",
- * Ezequiel E. Ferrero, Juan Pablo De Francesco, Nicolás Wolovick,
- * Sergio A. Cannas
- * http://arxiv.org/abs/1101.0876
- */
-
-/* Parallel Version: Major changes. 
- * New features were included, in order to distribute processing into 
- * Linux clusters using OpenMpi library, and get maximum paralization on each node, 
- * using OpenMP library for thread handling,
- * Javier Nicolas Uranga, Postgraduate Thesis in Distributed Systems, 
- * National University of Cordoba, Argentina, UNC-FAMAF, January 2012.
- * http://www.famaf.unc.edu.ar/wp-content/uploads/2014/04/8-Javier-Uranga.pdf
  */
 
 
