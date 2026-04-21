@@ -9,7 +9,7 @@ Especialización en Servicios y Sistemas Distribuidos
 Facultad de Matemática, Astronomía y Física
 Universidad Nacional de Córdoba, Argentina
 Marzo de 2012
-http://www.famaf.unc.edu.ar/wp-content/uploads/2014/04/8-Javier-Uranga.pdf
+https://www.famaf.unc.edu.ar/documents/1260/8-Javier-Uranga.pdf
 
 El Objetivo del trabajo es estudiar los modelos más populares sobre paralelización de
 algoritmos de cómputo científico en multicore y clusters, resolviendo un problema de grilla y
@@ -45,3 +45,23 @@ The main objective is to obtain a correct implementation in the two paradigms (s
 memory and message passing) and solve concurrency problems that could arise (race conditions,
 deadlocks, etc). The secondary objective is to study scalability issues that arise when we look for
 solutions to achieve ideal scalability.
+
+
+Referencias:
+
+[1] http://openmp.org/, The OpenMP® API specification for parallel programming.
+[2] http://www.open-mpi.org/, An Open source High Performance Message Passing Library.
+[3] Ezequiel Ferrero, Juan Pablo De Francesco, Nicolás Wolovick, Sergio Cannas, q-state Potts
+model metastability study using optimized GPU-based Monte Carlo algorithms, Computer
+Physics Communications Journal. In Press http://dx.doi.org/10.1016/j.cpc.2012.02.026
+(2011) 6, 9-10.
+[4] http://www.openmp.org/mp-documents/spec25.pdf, OpenMP Application Program Interface,
+Spec 2.5 (2005).
+[5] Ezequiel Ferrero, "Dinámica de Relajación del Modelo de Potts de q estados bidimensional:
+una contribución a la descripción de propiedades de no-equilibrio en transiciones de fase de
+primer orden", Tesis Doctoral (Dir.: Dr. Sergio A. Cannas), Universidad Nacional de
+Córdoba (2011) 38-44, 101, 142, 185-188.
+[6] http://www.uml.org/, UML®-The Unified Modeling Language™.
+[7] B. W. Kernigham, D. M. Ritchie, The C Programming Language, Prentice-Hall, Inc.,
+Englewood Cliffs, NJ, 1978.
+[8] http://developer.nvidia.com/, NVidia CUDA C Programming Guide, version 3.2 (2010)
